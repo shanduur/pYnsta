@@ -1,2 +1,5 @@
+# username, e-mail or phone number
 username = 'Uname'
-password = 'password123'
+
+# password
+password = 'password1'
