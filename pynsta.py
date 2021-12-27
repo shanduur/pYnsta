@@ -13,7 +13,9 @@ class instaBot():
 
     def __init__(self):
         # r before string means that it is read as raw
-        self.driver = webdriver.Chrome(executable_path=r"C:\Program Files (x86)\Google\Driver\chromedriver.exe")
+
+        opts = webdriver.ChromeOptions()
+        self.driver = webdriver.Remote(command_executor=r"http://localhost:4444", options=opts)
         self.topicList = [line.rstrip('\n') for line in open('topics.txt')]
         self.backupList = self.topicList
 

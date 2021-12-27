@@ -6,6 +6,12 @@
 ## Disclaimer
 This code is published for  educational purposes only. Using it may result in ban on your Instagram account.
 
+## Docker
+
+```
+docker run -d -p 4444:4444 -p 7900:7900 --shm-size="2g" selenium/standalone-chrome:96.0
+```
+
 ## Requirements
 To start using *pYnsta*, install all required dependencies:
 ```bash
