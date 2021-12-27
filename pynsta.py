@@ -102,12 +102,10 @@ class instaBot():
         return s1 + str(i) + s2
 
     def search(self):
-        search_textBoxBtn = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[2]/div[1]')
-        search_textBoxBtn.click()
-        time.sleep(2)
-
         search_textBox = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[2]/input') 
         self.currentTopic = self.selectRandomTopic(self.topicList)
+        if not self.currentTopic:
+            return self.currentTopic
         self.topicList.remove(self.currentTopic)
         search_textBox.send_keys(self.currentTopic)
         # wait for list to appear
@@ -122,6 +120,7 @@ class instaBot():
         firstPhoto_btn.click()
         # wait for loading photo
         time.sleep(2)
+        return self.currentTopic
 
     # as on first photo on the Top Posts part, there is only next button,
     # thus there is difference between xpath on first and following photos
@@ -144,8 +143,13 @@ class instaBot():
 
     # self explanatory
     def selectRandomTopic(self, l):
-        c = random.choice(l)
-        print(c)
+        c = None
+    
+        try:
+            c = random.choice(l)
+        except Exception:
+            pass
+
         return c
 
     # self explanatory
@@ -173,42 +177,46 @@ def main():
         numberOfLikes = len(bot.topicList)
         print('DEBUG')
     print(f'likes to drop = {numberOfLikes}')
-    numberOfLikesPerTag = int(numberOfLikes/len(bot.topicList))
 
     while True:
+        numberOfLikesPerTag = int(numberOfLikes/len(bot.topicList))
         # search for topic / hashtag
-        bot.search()
+        topic = bot.search()
+        if not topic:
+            pass
+        else:
+            print(topic)
+            while True:
+                try:
+                    numberOfLikes -= 1
+                    numberOfLikesPerTag -= 1
+                    bot.like()
+                    bot.goToNext()
+                    print(f'liked! likes left = {numberOfLikes}')
+                except Exception as e:
+                    print(e)
+                    break
 
-        while True:
+                if numberOfLikesPerTag < 1:
+                    print(f'out of likes per tag {bot.currentTopic}')
+                    break
+
+                if numberOfLikes < 1:
+                    print('out of likes')
+                    break
+
             try:
-                numberOfLikes -= 1
-                numberOfLikesPerTag -= 1
-                bot.like()
-                bot.goToNext()
-                print(f'liked! likes left = {numberOfLikes}')
+                bot.closeInstaPost()
+                bot.goHome()
             except Exception as e:
                 print(e)
-                break
-
-            if numberOfLikesPerTag < 1:
-                print(f'out of likes per tag {bot.currentTopic}')
-                break
-
-            if numberOfLikes < 1:
-                print('out of likes')
-                break
-
-        try:
-            bot.closeInstaPost()
-            bot.goHome()
-        except Exception as e:
-            print(e)
 
         if numberOfLikes < 1:
             print('Entering sleep')
             #time.sleep(60) # for debug purposes
             time.sleep( 60 * 60 * 24 + 60 * random.randrange(1,10,1) * random.randrange(1,60,1) )
             bot.topicList = bot.backupList
+            numberOfLikesPerTag = int(numberOfLikes/len(bot.topicList))
 
 if __name__ == '__main__':
     try:
