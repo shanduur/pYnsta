@@ -1,5 +1,5 @@
-# username, e-mail or phone number
-username = 'Uname'
+import os
+username = os.getenv('INSTA_USER')
 
 # password
-password = 'password1'
+password = os.getenv('INSTA_PASS')

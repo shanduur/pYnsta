@@ -7,6 +7,12 @@ import os
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
+import logging
+
+log = logging.Logger(name='default', level=logging.DEBUG)
+log.setLevel(logging.DEBUG)
+log.warn(log.level)
+
 from secrets import username, password
 
 class instaBot():
@@ -19,11 +25,35 @@ class instaBot():
         self.driver.quit()
 
     def __init__(self):
-        # r before string means that it is read as raw
-
         opts = webdriver.ChromeOptions()
-        self.driver = webdriver.Remote(command_executor=r"http://localhost:4444", options=opts)
-        self.topicList = [line.rstrip('\n') for line in open('topics.txt')]
+
+        host = os.getenv('SE_EVENT_BUS_HOST')
+        if not host:
+            host = 'localhost'
+
+        executor = f"http://{host}:4444"
+
+        while True:
+            try:
+                self.driver = webdriver.Remote(command_executor=executor, options=opts)
+                break
+            except Exception:
+                log.info('waiting for connection')
+                time.sleep(1)
+
+        topics = os.getenv('TOPICS')
+        if topics:
+            topics = topics.split(',')
+            topics = [t.replace(" ", "") for t in topics]
+            topics = [t.replace("\n", "") for t in topics]
+            topics = [t.replace("\r", "") for t in topics]
+            topics = [t if t.startswith('#') else '#'+t for t in topics]
+            topics = [t for t in topics if not t[1].isdigit()]
+            topics = [t for t in topics if len(t) >= 2]
+            topics = [t for t in topics if not t[1].isdigit()]
+            self.topicList = list(dict.fromkeys(topics))
+        else:
+            self.topicList = [line.rstrip('\n') for line in open('topics.txt')]
         self.backupList = self.topicList
 
     def login(self):
@@ -37,7 +67,7 @@ class instaBot():
             cookie_accept.click()
             time.sleep(4)
         except Exception:
-            print('cookies not found')
+            log.warning('cookies acceptance button not found')
             pass
     
         # input for Username / e-mail / phone number
@@ -60,7 +90,7 @@ class instaBot():
             noNotifications_btn.click()
             time.sleep(0.4)
         except Exception:
-            print("no notifications btn")
+            log.warning("no notifications btn")
 
     # OBSOLETE 
     # define if the site is displayed in wide or narrow mode
@@ -68,13 +98,13 @@ class instaBot():
         try:
             self.driver.find_element_by_xpath('//*[@id="react-root"]/section/main/section/div[1]/div[1]/div/article[1]/div[2]/section[1]/span[1]/button')
         except:
-            print('Exception occured - not wide')
+            log.warning('Exception occured - not wide')
             wide = False
 
             try:
                 self.driver.find_element_by_xpath('//*[@id="react-root"]/section/main/section/div[2]/div[1]/div/article[1]/div[2]/section[1]/span[1]/button')
             except:
-                print('Exception occured - not narrow')
+                log.warning('Exception occured - not narrow')
                 narrow = False
             else:
                 narrow = True
@@ -167,52 +197,55 @@ class instaBot():
 
 def main():
     bot = instaBot()
-    print('logging in')
+    log.info('logging in')
     bot.login()
-    print('skiping pop ups')
+    log.info('skiping pop ups')
     bot.notificationsPopUp()
 
     numberOfLikes = random.randrange(200,800, 1)
     if os.getenv('DEBUG'):
         numberOfLikes = len(bot.topicList)
-        print('DEBUG')
-    print(f'likes to drop = {numberOfLikes}')
+        log.info('DEBUG mode active')
+    log.info(f'likes to drop = {numberOfLikes}')
 
     while True:
         numberOfLikesPerTag = int(numberOfLikes/len(bot.topicList))
         # search for topic / hashtag
-        topic = bot.search()
+        try:
+            topic = bot.search()
+        except Exception:
+            continue
         if not topic:
             pass
         else:
-            print(topic)
+            log.info(topic)
             while True:
                 try:
                     numberOfLikes -= 1
                     numberOfLikesPerTag -= 1
                     bot.like()
                     bot.goToNext()
-                    print(f'liked! likes left = {numberOfLikes}')
+                    log.info(f'liked! likes left = {numberOfLikes}')
                 except Exception as e:
-                    print(e)
+                    log.warning(e)
                     break
 
                 if numberOfLikesPerTag < 1:
-                    print(f'out of likes per tag {bot.currentTopic}')
+                    log.info(f'out of likes per tag {bot.currentTopic}')
                     break
 
                 if numberOfLikes < 1:
-                    print('out of likes')
+                    log.info('out of likes')
                     break
 
             try:
                 bot.closeInstaPost()
                 bot.goHome()
             except Exception as e:
-                print(e)
+                log.info(e)
 
         if numberOfLikes < 1:
-            print('Entering sleep')
+            log.info('entering sleep')
             #time.sleep(60) # for debug purposes
             time.sleep( 60 * 60 * 24 + 60 * random.randrange(1,10,1) * random.randrange(1,60,1) )
             bot.topicList = bot.backupList
@@ -222,8 +255,8 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        print(e)
+        log.error(e)
         exit(1)
     except:
-        print('unknown error')
+        log.error('unknown error')
         exit(255)
