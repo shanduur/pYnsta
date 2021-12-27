@@ -1,7 +1,11 @@
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
+
 import time
 import random
+
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
 from secrets import username, password
 
@@ -10,6 +14,9 @@ class instaBot():
     wide = True
     topicList = []
     backupList = []
+
+    def __del__(self):
+        self.driver.quit()
 
     def __init__(self):
         # r before string means that it is read as raw
@@ -25,28 +32,35 @@ class instaBot():
         time.sleep(2)
 
         # click link to login to existing account
-        login_lnk = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/main/article/div[2]/div[2]/p/a')
-        login_lnk.click()
-        time.sleep(4)
+        try:
+            cookie_accept = self.driver.find_element_by_xpath('/html/body/div[4]/div/div/button[1]')
+            cookie_accept.click()
+            time.sleep(4)
+        except Exception:
+            print('cookies not found')
+            pass
     
         # input for Username / e-mail / phone number
-        cred_in = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[2]/div/label/input')
+        cred_in = self.driver.find_element_by_xpath('//*[@id="loginForm"]/div/div[1]/div/label/input')
         cred_in.send_keys(username)
 
         # input for password
-        pwd_in = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[3]/div/label/input')
+        pwd_in = self.driver.find_element_by_xpath('//*[@id="loginForm"]/div/div[2]/div/label/input')
         pwd_in.send_keys(password)
 
         # click button to log in to your account
-        login_btn = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[4]/button/div')
+        login_btn = self.driver.find_element_by_xpath('//*[@id="loginForm"]/div/div[3]/button')
         login_btn.click()
         time.sleep(5)
 
     # close popup asking for notifications on desktop
     def notificationsPopUp(self):
-        noNotifications_btn = self.driver.find_element_by_xpath('/html/body/div[4]/div/div/div[3]/button[2]')
-        noNotifications_btn.click()
-        time.sleep(0.4)
+        try:
+            noNotifications_btn = self.driver.find_element_by_xpath('/html/body/div[4]/div/div/div[3]/button[2]')
+            noNotifications_btn.click()
+            time.sleep(0.4)
+        except Exception:
+            print("no notifications btn")
 
     # OBSOLETE 
     # define if the site is displayed in wide or narrow mode
@@ -88,14 +102,18 @@ class instaBot():
         return s1 + str(i) + s2
 
     def search(self):
+        search_textBoxBtn = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[2]/div[1]')
+        search_textBoxBtn.click()
+        time.sleep(2)
+
         search_textBox = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[2]/input') 
-        topic = self.selectRandomTopic(self.topicList)
-        self.topicList.remove(topic)
-        search_textBox.send_keys(topic)
+        self.currentTopic = self.selectRandomTopic(self.topicList)
+        self.topicList.remove(self.currentTopic)
+        search_textBox.send_keys(self.currentTopic)
         # wait for list to appear
         time.sleep(2)
 
-        list_element = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[2]/div[2]/div[2]/div/a[1]') 
+        list_element = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[2]/div[3]/div/div[2]/div/div[1]/a') 
         list_element.click()
         # wait for loading page with photos
         time.sleep(5)
@@ -114,14 +132,15 @@ class instaBot():
     
     # self explanatory
     def goToNext(self):
-        next_btn = self.driver.find_element_by_xpath('/html/body/div[4]/div[1]/div/div/a[2]')
+        next_btn = self.driver.find_element_by_xpath('/html/body/div[6]/div[1]/div/div/div[2]/button')
         next_btn.click()
         time.sleep(2)
 
     # self explanatory
     def like(self):
-        like_btn = self.driver.find_element_by_xpath('/html/body/div[4]/div[2]/div/article/div[2]/section[1]/span[1]/button')
+        like_btn = self.driver.find_element_by_xpath('/html/body/div[6]/div[2]/div/article/div/div[2]/div/div/div[2]/section[1]/span[1]/button')
         like_btn.click()
+        time.sleep(1)
 
     # self explanatory
     def selectRandomTopic(self, l):
@@ -136,16 +155,20 @@ class instaBot():
 
     # self explanatory
     def goHome(self):
-        home_btn = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[3]/div/div[1]/div/a') 
+        home_btn = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[1]/a') 
         home_btn.click()
 
 def main():
     bot = instaBot()
+    print('logging in')
     bot.login()
+    print('skiping pop ups')
     bot.notificationsPopUp()
 
     numberOfLikes = random.randrange(200,800, 1)
     #numberOfLikes = random.randrange(3,10,1) # for debug purposes
+    print(f'likes to drop = {numberOfLikes}')
+    numberOfLikesPerTag = int(numberOfLikes/len(bot.topicList))
 
     while True:
         # search for topic / hashtag
@@ -154,12 +177,20 @@ def main():
         while True:
             try:
                 numberOfLikes -= 1
+                numberOfLikesPerTag -= 1
                 bot.like()
                 bot.goToNext()
-            except:
+                print(f'liked! likes left = {numberOfLikes}')
+            except Exception as e:
+                print(e)
+                break
+
+            if numberOfLikesPerTag < 1:
+                print(f'out of likes per tag {bot.currentTopic}')
                 break
 
             if numberOfLikes < 1:
+                print('out of likes')
                 break
 
         bot.closeInstaPost()
@@ -172,4 +203,7 @@ def main():
             bot.topicList = bot.backupList
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except:
+        exit(1)
