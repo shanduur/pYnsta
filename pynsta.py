@@ -1,17 +1,22 @@
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions
 
 import time
 import random
 import os
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
 import logging
 
-log = logging.Logger(name='default', level=logging.DEBUG)
+import logging
+from pythonjsonlogger import jsonlogger
+log = logging.getLogger('pynsta')
+logHandler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter()
+logHandler.setFormatter(formatter)
+log.addHandler(logHandler)
 log.setLevel(logging.DEBUG)
-log.warn(log.level)
 
 from secrets import username, password
 
@@ -36,6 +41,7 @@ class instaBot():
         while True:
             try:
                 self.driver = webdriver.Remote(command_executor=executor, options=opts)
+                self.wait = WebDriverWait(driver=self.driver, timeout=30, poll_frequency=0.1)
                 break
             except Exception:
                 log.info('waiting for connection')
@@ -63,7 +69,7 @@ class instaBot():
 
         # click link to login to existing account
         try:
-            cookie_accept = self.driver.find_element_by_xpath('/html/body/div[4]/div/div/button[1]')
+            cookie_accept = self.driver.find_element(by=By.XPATH, value='/html/body/div[4]/div/div/button[1]')
             cookie_accept.click()
             time.sleep(4)
         except Exception:
@@ -71,22 +77,22 @@ class instaBot():
             pass
     
         # input for Username / e-mail / phone number
-        cred_in = self.driver.find_element_by_xpath('//*[@id="loginForm"]/div/div[1]/div/label/input')
+        cred_in = self.driver.find_element(by=By.XPATH, value='//*[@id="loginForm"]/div/div[1]/div/label/input')
         cred_in.send_keys(username)
 
         # input for password
-        pwd_in = self.driver.find_element_by_xpath('//*[@id="loginForm"]/div/div[2]/div/label/input')
+        pwd_in = self.driver.find_element(by=By.XPATH, value='//*[@id="loginForm"]/div/div[2]/div/label/input')
         pwd_in.send_keys(password)
 
         # click button to log in to your account
-        login_btn = self.driver.find_element_by_xpath('//*[@id="loginForm"]/div/div[3]/button')
+        login_btn = self.driver.find_element(by=By.XPATH, value='//*[@id="loginForm"]/div/div[3]/button')
         login_btn.click()
         time.sleep(5)
 
     # close popup asking for notifications on desktop
     def notificationsPopUp(self):
         try:
-            noNotifications_btn = self.driver.find_element_by_xpath('/html/body/div[6]/div/div/div/div[3]/button[2]')
+            noNotifications_btn = self.driver.find_element(by=By.XPATH, value='/html/body/div[6]/div/div/div/div[3]/button[2]')
             noNotifications_btn.click()
             time.sleep(0.4)
         except Exception:
@@ -96,13 +102,13 @@ class instaBot():
     # define if the site is displayed in wide or narrow mode
     def wideOrNarrow(self):
         try:
-            self.driver.find_element_by_xpath('//*[@id="react-root"]/section/main/section/div[1]/div[1]/div/article[1]/div[2]/section[1]/span[1]/button')
+            self.driver.find_element(by=By.XPATH, value='//*[@id="react-root"]/section/main/section/div[1]/div[1]/div/article[1]/div[2]/section[1]/span[1]/button')
         except:
             log.warning('Exception occured - not wide')
             wide = False
 
             try:
-                self.driver.find_element_by_xpath('//*[@id="react-root"]/section/main/section/div[2]/div[1]/div/article[1]/div[2]/section[1]/span[1]/button')
+                self.driver.find_element(by=By.XPATH, value='//*[@id="react-root"]/section/main/section/div[2]/div[1]/div/article[1]/div[2]/section[1]/span[1]/button')
             except:
                 log.warning('Exception occured - not narrow')
                 narrow = False
@@ -132,7 +138,7 @@ class instaBot():
         return s1 + str(i) + s2
 
     def search(self):
-        search_textBox = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[2]/input') 
+        search_textBox = self.driver.find_element(by=By.XPATH, value='//*[@id="react-root"]/section/nav/div[2]/div/div/div[2]/input') 
         self.currentTopic = self.selectRandomTopic(self.topicList)
         if not self.currentTopic:
             return self.currentTopic
@@ -141,12 +147,12 @@ class instaBot():
         # wait for list to appear
         time.sleep(2)
 
-        list_element = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[2]/div[3]/div/div[2]/div/div[1]/a') 
+        list_element = self.driver.find_element(by=By.XPATH, value='//*[@id="react-root"]/section/nav/div[2]/div/div/div[2]/div[3]/div/div[2]/div/div[1]/a') 
         list_element.click()
         # wait for loading page with photos
         time.sleep(5)
 
-        firstPhoto_btn = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/main/article/div[2]/div/div[1]/div[1]/a')
+        firstPhoto_btn = self.driver.find_element(by=By.XPATH, value='//*[@id="react-root"]/section/main/article/div[2]/div/div[1]/div[1]/a')
         firstPhoto_btn.click()
         # wait for loading photo
         time.sleep(2)
@@ -155,19 +161,31 @@ class instaBot():
     # as on first photo on the Top Posts part, there is only next button,
     # thus there is difference between xpath on first and following photos
     def goToSecond(self):
-        next_btn = self.driver.find_element_by_xpath('/html/body/div[4]/div[1]/div/div/a')
+        next_btn = self.driver.find_element(by=By.XPATH, value='/html/body/div[4]/div[1]/div/div/a')
         next_btn.click()
         time.sleep(2)
     
     # self explanatory
     def goToNext(self):
-        next_btn = self.driver.find_element_by_xpath('/html/body/div[6]/div[1]/div/div/div[2]/button')
+        next_btn = self.driver.find_element(by=By.XPATH, value='/html/body/div[6]/div[1]/div/div/div[2]/button')
         next_btn.click()
         time.sleep(2)
 
     # self explanatory
     def like(self):
-        like_btn = self.driver.find_element_by_xpath('/html/body/div[6]/div[2]/div/article/div/div[2]/div/div/div[2]/section[1]/span[1]/button')
+        try:
+            like_btnSVG = self.driver.find_element(by=By.XPATH, value='/html/body/div[6]/div[2]/div/article/div/div[2]/div/div/div[2]/section[1]/span[1]/button/div/span//*[local-name() = "svg"]')
+        except Exception:
+            log.warning('no svg elements')
+            input("Press Enter to continue...")
+            return
+
+        label = like_btnSVG.get_attribute('aria-label')
+
+        if str(label).upper() == 'Unlike'.upper():
+            return
+
+        like_btn = self.driver.find_element(by=By.XPATH, value='/html/body/div[6]/div[2]/div/article/div/div[2]/div/div/div[2]/section[1]/span[1]/button')
         like_btn.click()
         time.sleep(1)
 
@@ -184,13 +202,13 @@ class instaBot():
 
     # self explanatory
     def closeInstaPost(self):
-        close_btn = self.driver.find_element_by_xpath('/html/body/div[6]/div[3]/button')   
+        close_btn = self.driver.find_element(by=By.XPATH, value='/html/body/div[6]/div[3]/button')   
         close_btn.click()
         time.sleep(2)
 
     # self explanatory
     def goHome(self):
-        home_btn = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[1]/a') 
+        home_btn = self.driver.find_element(by=By.XPATH, value='//*[@id="react-root"]/section/nav/div[2]/div/div/div[1]/a') 
         home_btn.click()
         time.sleep(5)
         self.notificationsPopUp()
@@ -209,6 +227,13 @@ def main():
     log.info(f'likes to drop = {numberOfLikes}')
 
     while True:
+        if numberOfLikes < 1 or len(bot.topicList) == 0:
+            log.info('entering sleep')
+            #time.sleep(60) # for debug purposes
+            time.sleep( 60 * 60 * 24 + 60 * random.randrange(1,10,1) * random.randrange(1,60,1) )
+            bot.topicList = bot.backupList
+            numberOfLikesPerTag = int(numberOfLikes/len(bot.topicList))
+
         numberOfLikesPerTag = int(numberOfLikes/len(bot.topicList))
         # search for topic / hashtag
         try:
@@ -243,13 +268,6 @@ def main():
                 bot.goHome()
             except Exception as e:
                 log.info(e)
-
-        if numberOfLikes < 1:
-            log.info('entering sleep')
-            #time.sleep(60) # for debug purposes
-            time.sleep( 60 * 60 * 24 + 60 * random.randrange(1,10,1) * random.randrange(1,60,1) )
-            bot.topicList = bot.backupList
-            numberOfLikesPerTag = int(numberOfLikes/len(bot.topicList))
 
 if __name__ == '__main__':
     try:

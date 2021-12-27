@@ -8,6 +8,7 @@ idna==3.3
 outcome==1.1.0
 pycparser==2.21
 pyOpenSSL==21.0.0
+python-json-logger==2.0.2
 selenium==4.1.0
 six==1.16.0
 sniffio==1.2.0
