@@ -3,7 +3,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 import time
 import random
-
+import os
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
@@ -56,7 +56,7 @@ class instaBot():
     # close popup asking for notifications on desktop
     def notificationsPopUp(self):
         try:
-            noNotifications_btn = self.driver.find_element_by_xpath('/html/body/div[4]/div/div/div[3]/button[2]')
+            noNotifications_btn = self.driver.find_element_by_xpath('/html/body/div[6]/div/div/div/div[3]/button[2]')
             noNotifications_btn.click()
             time.sleep(0.4)
         except Exception:
@@ -150,13 +150,16 @@ class instaBot():
 
     # self explanatory
     def closeInstaPost(self):
-        close_btn = self.driver.find_element_by_xpath('/html/body/div[4]/div[3]/button')   
+        close_btn = self.driver.find_element_by_xpath('/html/body/div[6]/div[3]/button')   
         close_btn.click()
+        time.sleep(2)
 
     # self explanatory
     def goHome(self):
         home_btn = self.driver.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[1]/a') 
         home_btn.click()
+        time.sleep(5)
+        self.notificationsPopUp()
 
 def main():
     bot = instaBot()
@@ -166,7 +169,9 @@ def main():
     bot.notificationsPopUp()
 
     numberOfLikes = random.randrange(200,800, 1)
-    #numberOfLikes = random.randrange(3,10,1) # for debug purposes
+    if os.getenv('DEBUG'):
+        numberOfLikes = len(bot.topicList)
+        print('DEBUG')
     print(f'likes to drop = {numberOfLikes}')
     numberOfLikesPerTag = int(numberOfLikes/len(bot.topicList))
 
@@ -193,8 +198,11 @@ def main():
                 print('out of likes')
                 break
 
-        bot.closeInstaPost()
-        bot.goHome()
+        try:
+            bot.closeInstaPost()
+            bot.goHome()
+        except Exception as e:
+            print(e)
 
         if numberOfLikes < 1:
             print('Entering sleep')
@@ -205,5 +213,9 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except:
+    except Exception as e:
+        print(e)
         exit(1)
+    except:
+        print('unknown error')
+        exit(255)
