@@ -1,0 +1,23 @@
+{
+    "config": {
+        "max-likes": 1000,
+        "wait-time": "1h"
+    },
+    "selenium": {
+        "host": "localhost",
+        "port": 4444
+    },
+    "instagram": {
+        "login": "username",
+        "password": "passw0rd"
+    },
+    "hashtags": [
+        "#thousandsons",
+        "#warhammer",
+        "#paintingwarhammer",
+        "#sonsofhorus",
+        "#grimdark",
+        "#spacemarines",
+        "#admech"
+    ]
+}

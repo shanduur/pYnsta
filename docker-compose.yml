@@ -33,9 +33,9 @@ services:
       - selenium-hub
       - chrome
     environment:
-      # DEBUG: 1
-      SE_EVENT_BUS_HOST: selenium-hub
-      INSTA_USER: user
+      SELENIUM_HOST: selenium-hub
+      SELENIUM_PORT: 4444
+      INSTA_USER: username
       INSTA_PASS: passw0rd
       TOPICS: >
         thousandsons,warhammer,paintingwarhammer,
