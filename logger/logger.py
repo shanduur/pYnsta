@@ -5,7 +5,7 @@ from pythonjsonlogger import jsonlogger
 
 log = logging.getLogger('pynsta')
 logHandler = logging.StreamHandler()
-formatter = jsonlogger.JsonFormatter('%(levelname)s %(message)s')
+formatter = jsonlogger.JsonFormatter('%(asctime)s %(levelname)s %(message)s')
 logHandler.setFormatter(formatter)
 log.addHandler(logHandler)
 

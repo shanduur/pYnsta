@@ -37,9 +37,19 @@ class Session:
 
         self.current_hashtag = initial_hashtag
 
+        log.info("performing session startup", extra={
+            "initial-hashtag": self.current_hashtag,
+            "valid-until": self.valid_until,
+        })
+
         self.__login()
         self.__close_notifications_popup()
         self.__search()
+
+        log.info("session created successfully", extra={
+            "initial-hashtag": self.current_hashtag,
+            "valid-until": self.valid_until,
+        })
 
     def __del__(self) -> None:
         log.info("deleting current session")
@@ -49,6 +59,8 @@ class Session:
             log.error("driver was not initialized", extra={"error": e})
         except WebDriverException as e:
             log.error("session was already killed", extra={"error": e})
+        except Exception as e:
+            log.error("ignored exception during session deletion", extra={"error": e})
 
     def __call__(self, hashtag: str = "#instagram") -> webdriver.Remote:
         if self.valid_until > dt.datetime.now():
