@@ -35,15 +35,11 @@ services:
     environment:
       SELENIUM_HOST: selenium-hub
       SELENIUM_PORT: 4444
-      INSTA_USER: username
+      INSTA_LOGIN: user
       INSTA_PASS: passw0rd
+      SLEEP_TIME: 15m
       TOPICS: >
-        thousandsons,warhammer,paintingwarhammer,
-        sonsofhorus,grimdark,spacemarines,
-        admech,wordbearers,ultramarines,
-        bloodangels,deathwatch,starwars,starwarslegion,
-        fleshtearers,nightwatch,mandalorian,
-        necrons,orcs,blacktemplars
+        instagram,selenium,pynsta
     networks:
       - selenium
     restart: 'always'
