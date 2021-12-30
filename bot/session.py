@@ -1,6 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, NoSuchElementException
 
 import time
 import datetime as dt
@@ -42,9 +42,12 @@ class Session:
             "valid-until": self.valid_until,
         })
 
-        self.__login()
-        self.__close_notifications_popup()
-        self.__search()
+        try:
+            self.__login()            
+            self.__close_notifications_popup()
+            self.__search()
+        except NoSuchElementException:
+            raise Exception("unable to initialize session, check your account configuration")
 
         log.info("session created successfully", extra={
             "initial-hashtag": self.current_hashtag,
