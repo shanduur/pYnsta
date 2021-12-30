@@ -28,10 +28,14 @@ class Bot:
                 log.info("like given", extra={"likes-remaining": self.day_likes})
 
             if self.day_likes <= 0 and self.current_date != dt.today().date():
+                self.current_date == dt.today().date()
                 self.day_likes = random.randint(int(self.config.max_likes/2), self.config.max_likes)
             elif self.day_likes <= 0 and self.current_date == dt.today().date():
                 log.info("out of likes, waiting for date change", extra={"wait-time": "60m"})
                 time.sleep(config.parse_time("1h"))
+            elif self.day_likes > 0 and self.current_date != dt.today().date():
+                self.current_date == dt.today().date()
+                self.day_likes = random.randint(int(self.config.max_likes/2), self.config.max_likes)
 
     def __get_driver(self) -> webdriver.Remote:
         try:
