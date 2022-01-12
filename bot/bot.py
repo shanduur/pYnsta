@@ -58,7 +58,7 @@ class Bot:
     # self explanatory
     def like(self):
         try:
-            like_btnSVG = self.__get_driver().find_element(by=By.XPATH, value='/html/body/div[6]/div[2]/div/article/div/div[2]/div/div/div[2]/section[1]/span[1]/button/div/span//*[local-name() = "svg"]')
+            like_btnSVG = self.__get_driver().find_element(by=By.XPATH, value='/html/body/div[6]/div[3]/div/article/div/div[2]/div/div/div[2]/section[1]/span[1]/button/div/span//*[local-name() = "svg"]')
         except Exception:
             log.warning('no svg elements')
             return
@@ -69,7 +69,7 @@ class Bot:
             time.sleep(random.randint(2, 10))
             return
 
-        like_btn = self.__get_driver().find_element(by=By.XPATH, value='/html/body/div[6]/div[2]/div/article/div/div[2]/div/div/div[2]/section[1]/span[1]/button')
+        like_btn = self.__get_driver().find_element(by=By.XPATH, value='/html/body/div[6]/div[3]/div/article/div/div[2]/div/div/div[2]/section[1]/span[1]/button')
         like_btn.click()
         time.sleep(random.randint(2, 10))
 
@@ -82,6 +82,6 @@ class Bot:
 
     # self explanatory
     def goto_next(self) -> None:
-        next_btn = self.__get_driver().find_element(by=By.XPATH, value='/html/body/div[6]/div[1]/div/div/div[2]/button')
+        next_btn = self.__get_driver().find_element(by=By.XPATH, value='/html/body/div[6]/div[2]/div/div[2]/button')
         next_btn.click()
         time.sleep(2)
