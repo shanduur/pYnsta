@@ -13,6 +13,7 @@ import config
 
 class Bot:
     def __init__(self) -> None:
+        log.info("initializing bot")
         self.hashtags = config.Tags()
         self.config = config.Config()
         self.session = Session(account=config.Instagram(), selenium=config.Selenium(), initial_hashtag=self.hashtags.random())
@@ -20,6 +21,7 @@ class Bot:
         self.current_date = dt.today().date()
 
     def __call__(self) -> None:
+        log.info("bot called, starting...")
         while True:
             if self.day_likes > 0:
                 self.like()
@@ -38,6 +40,7 @@ class Bot:
                 self.day_likes = random.randint(int(self.config.max_likes/2), self.config.max_likes)
 
     def __get_driver(self) -> webdriver.Remote:
+        log.info("driver requested")
         try:
             return self.session(hashtag=self.hashtags.current_tag)
         except NoLongerValid:
@@ -57,31 +60,25 @@ class Bot:
 
     # self explanatory
     def like(self):
+        log.info(">> like")
         try:
-            like_btnSVG = self.__get_driver().find_element(by=By.XPATH, value='/html/body/div[6]/div[3]/div/article/div/div[2]/div/div/div[2]/section[1]/span[1]/button/div/span//*[local-name() = "svg"]')
-        except Exception:
-            log.warning('no svg elements')
-            return
-
-        label = like_btnSVG.get_attribute('aria-label')
-
-        if str(label).upper() == 'Unlike'.upper():
+            like_btn = self.__get_driver().find_element(by=By.XPATH, value='//*[@aria-label="Like"]/parent::*/parent::button')
+            like_btn.click()
             time.sleep(random.randint(2, 10))
-            return
-
-        like_btn = self.__get_driver().find_element(by=By.XPATH, value='/html/body/div[6]/div[3]/div/article/div/div[2]/div/div/div[2]/section[1]/span[1]/button')
-        like_btn.click()
-        time.sleep(random.randint(2, 10))
+        except Exception:
+            pass
 
     # as on first photo on the Top Posts part, there is only next button,
     # thus there is difference between xpath on first and following photos
     def goto_second(self) -> None:
-        next_btn = self.__get_driver().find_element(by=By.XPATH, value='/html/body/div[4]/div[1]/div/div/a')
+        log.info("going to 2nd pic")
+        next_btn = self.__get_driver().find_element(by=By.XPATH, value='//*[@type="button"]//*[@aria-label="Next"]')
         next_btn.click()
         time.sleep(2)
 
     # self explanatory
     def goto_next(self) -> None:
-        next_btn = self.__get_driver().find_element(by=By.XPATH, value='/html/body/div[6]/div[2]/div/div[2]/button')
+        log.info("goiing to next pic")
+        next_btn = self.__get_driver().find_element(by=By.XPATH, value='//*[@type="button"]//*[@aria-label="Next"]')
         next_btn.click()
         time.sleep(2)

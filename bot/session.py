@@ -12,6 +12,7 @@ import config
 
 class Session:
     def __init__(self, account: config.Instagram, selenium: config.Selenium, initial_hashtag: str = "#instagram") -> None:
+        log.info("initializing session")
         self.session_id = uuid.uuid4()
         self.login = account.login
         self.password = account.password
@@ -43,8 +44,14 @@ class Session:
         })
 
         try:
-            self.__login()            
-            self.__close_notifications_popup()
+            log.info("logging in")
+            self.__login()
+            try:
+                log.info("trying to close notification")
+                self.__close_notifications_popup()
+            except NoSuchElementException:
+                pass
+            log.info("searching for the topic")
             self.__search()
         except NoSuchElementException:
             raise Exception("unable to initialize session, check your account configuration")
@@ -66,6 +73,7 @@ class Session:
             log.error("ignored exception during session deletion", extra={"error": e})
 
     def __call__(self, hashtag: str = "#instagram") -> webdriver.Remote:
+        log.info("session called")
         if self.valid_until > dt.datetime.now():
             if hashtag != self.current_hashtag:
                 log.info("hashtag changed", extra={"old-hashtag": self.current_hashtag, "new-hashtag": hashtag})
@@ -80,6 +88,7 @@ class Session:
             raise NoLongerValid(valid_until=self.valid_until)
 
     def __login(self) -> None:
+        log.info("logging in to instagram")
         # navigate to webpage
         self.driver.get('https://instagram.com')
         time.sleep(2)
@@ -108,6 +117,7 @@ class Session:
 
     # close popup asking for notifications on desktop
     def __close_notifications_popup(self) -> None:
+        log.info("closing notifications popup - this might fail!")
         try:
             noNotifications_btn = self.driver.find_element(by=By.XPATH, value='/html/body/div[6]/div/div/div/div[3]/button[2]')
             noNotifications_btn.click()
@@ -116,19 +126,23 @@ class Session:
             log.info("no notifications btn")
 
     def __search(self) -> None:
-        search_textBox = self.driver.find_element(by=By.XPATH, value='//*[@id="react-root"]/section/nav/div[2]/div/div/div[2]/input') 
-        search_textBox.send_keys(self.current_hashtag)
-        # wait for list to appear
-        time.sleep(2)
+        try:
+            search_textBox = self.driver.find_element(by=By.XPATH, value='//input[@aria-label="Search input"]') 
+            search_textBox.send_keys(self.current_hashtag)
+            # wait for list to appear
+            time.sleep(2)
+            list_element = self.driver.find_element(by=By.XPATH, value=f'''//a[@href="/explore/tags/{self.current_hashtag.replace('#', '', -1)}/"]''') 
+            list_element.click()
+        except:
+            self.driver.get(f"https://www.instagram.com/explore/tags/{self.current_hashtag.replace('#', '', -1)}/")
 
-        list_element = self.driver.find_element(by=By.XPATH, value='//*[@id="react-root"]/section/nav/div[2]/div/div/div[2]/div[3]/div/div[2]/div/div[1]/a') 
-        list_element.click()
         # wait for loading page with photos
         time.sleep(5)
 
-        firstPhoto_btn = self.driver.find_element(by=By.XPATH, value='//*[@id="react-root"]/section/main/article/div[2]/div/div[1]/div[1]/a')
+        firstPhoto_btn = self.driver.find_element(by=By.XPATH, value='//a[@role="link"][@tabindex="0"]')
         firstPhoto_btn.click()
         # wait for loading photo
+
         time.sleep(2)
 
     def disconnect(self) -> None:
@@ -142,13 +156,13 @@ class Session:
 
     # self explanatory
     def close_post(self):
-        close_btn = self.driver.find_element(by=By.XPATH, value='/html/body/div[6]/div[3]/button')   
+        close_btn = self.driver.find_element(by=By.XPATH, value='//*[@role="button"]/*/*[@aria-label="Close"]')
         close_btn.click()
         time.sleep(2)
 
     # self explanatory
     def go_home(self):
-        home_btn = self.driver.find_element(by=By.XPATH, value='//*[@id="react-root"]/section/nav/div[2]/div/div/div[1]/a') 
+        home_btn = self.driver.find_element(by=By.XPATH, value='//a[@href="/"]') 
         home_btn.click()
         time.sleep(5)
         self.__close_notifications_popup()
